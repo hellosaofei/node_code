@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <input
+      type="text"
+      name="title"
+      id="titleContainer"
+      placeholder="请输入文件名称"
+    />
+    <input
+      type="text"
+      name="info"
+      id="infoContainer"
+      placeholder="请输入文件信息"
+    />
+    <input type="file" name="upload" id="fileContainer" />
+    <button onclick="handleClick()">点击上传</button>
+    <script>
+      let file_obj = null;
+      document
+        .querySelector("#fileContainer")
+        .addEventListener("change", (e) => {
+          const [file] = e.target.files;
+          if (!file) {
+            console.log("未选择文件");
+            return;
+          }
+          console.log("文件对象赋值完成");
+          file_obj = file;
+        });
+      function handleClick() {
+        const title = document.querySelector("#titleContainer").value;
+        const info = document.querySelector("#infoContainer").value;
+        if (!file_obj) {
+          console.log("未选择文件");
+          return;
+        }
+        const form_data = createFormData({
+          title: title,
+          file: file_obj,
+          info: info,
+        });
+        myajax({
+          url: "http://localhost:8080/upload",
+          data: form_data,
+        }).then((res) => {
+          console.log(JSON.parse(res));
+        });
+      }
+      function createFormData({ title, info, file }) {
+        const fd = new FormData();
+        fd.append("title", title);
+        fd.append("file", file);
+        fd.append("info", info);
+        return fd;
+      }
+      function myajax({ url = "", method = "post", data, headers = {} }) {
+        return new Promise((resolve, reject) => {
+          let xhr = new XMLHttpRequest();
+          // 初始化一个请求
+          xhr.open(method, url);
+          // 设置请求头
+          Object.keys(headers).forEach((key) => {
+            xhr.setRequestHeader(key, headers[key]);
+          });
+          // 发送请求
+          xhr.send(data);
+          // 请求完成时
+          xhr.onload = (e) => {
+            const response = e.target.response;
+            resolve(response);
+          };
+          // 出现错误时
+          xhr.onerror = (error) => {
+            reject(error);
+          };
+        });
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>nodeJs文件流下载</title>
+  </head>
+  <body>
+    <button id="btn">download</button>
+
+    <script>
+      const btn = document.getElementById("btn");
+      btn.onclick = () => {
+        fetch("http://localhost:3001/download", {
+          method: "post",
+          body: JSON.stringify({
+            fileName: "1.jpg",
+          }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+          .then((res) => res.arrayBuffer())
+          .then((res) => {
+            const blob = new Blob([res], { type: "image/jpg" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "1.jpg";
+            a.click();
+          });
+      };
+    </script>
+  </body>
+</html>

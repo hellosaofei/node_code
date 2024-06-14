@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>QRCode Example</title>
+    <script src="https://cdn.bootcdn.net/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
+    <style>
+      #canvas {
+        height: 300px;
+        width: 300px;
+        border: 1px solid #000; /* 添加边框以便更清楚地看到二维码 */
+      }
+    </style>
+  </head>
+  <body>
+    <!-- <div id="myqrcode"></div> -->
+    <img src="" id="image" alt="" />
+    <script type="text/javascript">
+      const options = {
+        errorCorrectionLevel: "L", //容错率L（低）H(高)
+        margin: 1, //二维码内边距，默认为4。单位px
+        height: 200, //二维码高度
+        width: 200, //二维码宽度
+        scal: 177,
+        color: {
+          dark: "#000", // 二维码背景颜色
+          // light: '#000' // 二维码前景颜色
+        },
+        rendererOpts: {
+          quality: 0.9,
+        },
+      };
+      QRCode.toDataURL("text", options, function (err, url) {
+        if (err) throw err;
+
+        var img = document.getElementById("image");
+        img.src = url;
+        console.log(url);
+      });
+      // QRCode.toCanvas("二维码信息文本", options)
+      //   .then((canvas) => {
+      //     document.getElementById("myqrcode").append(canvas);
+      //   })
+      //   .catch((err) => {
+      //     console.log(err);
+      //   });
+    </script>
+  </body>
+</html>

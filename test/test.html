@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <button id="button">点击</button>
+    <ul id="container"></ul>
+    <script>
+      function fibs(n) {
+        let cur = 0;
+        let a = 0;
+        let b = 1;
+        while (cur < n) {
+          [a, b] = [b, a + b];
+          cur++;
+        }
+        return a;
+      }
+    </script>
+  </body>
+</html>

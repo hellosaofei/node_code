@@ -1,0 +1,26 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>大文件分片上传</title>
+  </head>
+  <body>
+    <div>
+      <p>
+        <progress id="uploadProgress" value="0"></progress>
+      </p>
+
+      <p>
+        <input type="file" id="videoUploader" value="选择视频" />
+      </p>
+      <p>
+        <span id="uploadInfo">未选择文件</span>
+      </p>
+      <p>
+        <button id="uploadBtn">上传视频</button>
+      </p>
+    </div>
+    <script src="https://cdn.bootcdn.net/ajax/libs/axios/1.5.0/axios.min.js"></script>
+    <script src="./src/app2.js" type="module"></script>
+  </body>
+</html>

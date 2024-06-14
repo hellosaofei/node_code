@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+  </head>
+  <body>
+    <div id="root">
+      <progress :value="currSize" :max="maxSize"></progress>
+      <input
+        type="file"
+        ref="videoUploader"
+        value="选择视频"
+        v-on:change="updateInfo"
+      />
+      <span>{{uploadInfo}}</span>
+      <button v-on:click="uploadVideo">上传视频</button>
+    </div>
+  </body>
+  <script type="text/javascript">
+    const allow_type = ["video/mp4"];
+    const chunkSize = 1024 * 1024;
+
+    Vue.config.productionTip = false;
+
+    const vm = new Vue({
+      el: "#root",
+      data: {
+        currSize: 0,
+        uploadInfo: "请选择文件",
+        maxSize: 0,
+      },
+      computed: {},
+      methods: {
+        updateInfo() {
+          console.log("文件变化了！！！");
+        },
+
+        handleClick() {
+          this.myajax({
+            url: "http://localhost:8000/hello",
+            method: "get",
+          }).then((res) => {
+            console.log("请求结果为", JSON.parse(res.data));
+          });
+        },
+
+        // 封装一个ajax 函数
+        myajax({ url = "", method = "post", data, headers = {}, requestList }) {
+          return new Promise((resolve, reject) => {
+            let xhr = new XMLHttpRequest();
+            xhr.open(method, url);
+            Object.keys(headers).forEach((key) => {
+              xhr.setRequestHeader(key, headers[key]);
+            });
+            xhr.send(data);
+            xhr.onload = (e) => {
+              const response = e.target.response;
+              resolve(JSON.parse(response));
+            };
+          });
+        },
+        // 点击后上传 视频文件
+        async uploadVideo() {
+          const file = this.$refs.videoUploader.files[0];
+          if (!file) {
+            this.uploadInfo = "未检测到文件";
+            return false;
+          }
+          if (!allow_type.includes(file.type)) {
+            this.uploadInfo = "不支持该文件上传";
+            return false;
+          }
+          const { name, type, size } = file;
+          this.maxSize = size;
+          const fileName = this.getUploadTime().concat(name);
+          this.uploadInfo = "文件正在上传";
+          while (this.currSize < size) {
+            const fileChunk = file.slice(
+              this.currSize,
+              this.currSize + chunkSize
+            );
+            const formData = this.createFormData({
+              name: fileName,
+              type,
+              size,
+              uploadedSize: this.currSize,
+              file: fileChunk,
+            });
+            try {
+              const uploadResult = await this.myajax({
+                url: "http://localhost:8000/upload_video",
+                method: "post",
+                data: formData,
+              });
+              // console.log("上传结果", uploadResult);
+            } catch (error) {
+              this.uploadInfo = "文件上传过程中出现错误";
+              console.error(error);
+              return;
+            }
+            this.currSize += fileChunk.size;
+          }
+          this.uploadInfo = "所有chunk均上传成功";
+        },
+        // 生成 formData 数据
+        createFormData({ name, type, size, uploadedSize, file }) {
+          const fd = new FormData();
+          fd.append("name", name);
+          fd.append("type", type);
+          fd.append("size", size);
+          fd.append("uploadedSize", uploadedSize);
+          fd.append("file", file);
+          return fd;
+        },
+
+        getUploadTime() {
+          const date = new Date();
+          return date.getTime().toString();
+        },
+      },
+    });
+  </script>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+    />
+    <title>抽奖</title>
+    <style>
+      body {
+        background-color: #444;
+        font-size: 14px;
+        text-align: center;
+        display: flex; /* 使用flexbox布局方式，方便设置网页内容水平和垂直居中 */
+        justify-content: center; /* 水平居中 */
+        align-items: center; /* 垂直居中 */
+        height: 100vh; /* 视口高度，确保垂直方向也居中 */
+      }
+    </style>
+
+    <script src="https://unpkg.com/lucky-canvas@1.7.25"></script>
+  </head>
+
+  <body>
+    <div id="my-lucky"></div>
+
+    <script>
+      const images = [
+        {
+          id: 1,
+          icon: "https://img.iwave.net.cn/bmw/b365029b17e0e1fc972b52080f58cc80.png",
+          title: "iphone15 Pro",
+        },
+        {
+          id: 2,
+          icon: "https://img.iwave.net.cn/bmw/bbb9c678305a2f55ce7b285561744596.png",
+          title: "普通红包",
+        },
+        {
+          id: 3,
+          icon: "https://img.iwave.net.cn/bmw/9b03fe2dcbb6be8c02ac63ff0927c92f.png",
+          title: "5元话费券",
+        },
+        {
+          id: 4,
+          icon: "https://img.iwave.net.cn/bmw/7cffe2c789279a83ef577283535a2c1b.png",
+          title: "每日红包",
+        },
+        {
+          id: 5,
+          icon: "https://img.iwave.net.cn/bmw/a3731dd942951974b9be1da171735d82.png",
+          title: "幸运红包",
+        },
+        {
+          id: 6,
+          icon: "https://img.iwave.net.cn/bmw/dc3c6e7624f6b8291c82a36b552785f6.png",
+          title: "10元话费券",
+        },
+        {
+          id: 7,
+          icon: "https://img.iwave.net.cn/bmw/a6b978fd0064a45ebcd6b649d49714ea.png",
+          title: "惊喜福袋",
+        },
+        {
+          id: 8,
+          icon: "https://img.iwave.net.cn/bmw/873a940855c837b4d6622fe8da442b8b.png",
+          title: "谢谢参与",
+        },
+      ];
+      const prizeImg = {
+        src: "https://img2.baidu.com/it/u=1752750112,2768571294&fm=253&fmt=auto&app=138&f=JPEG",
+        width: "40%",
+        top: "10%",
+      };
+      const myLucky = new LuckyCanvas.LuckyWheel("#my-lucky", {
+        width: "600px",
+        height: "600px",
+        blocks: [{ padding: "10px", background: "#ff4500" }],
+        prizes: [
+          {
+            range: 2,
+            background: "#e9e8fe",
+            fonts: [{ text: "一等奖" }],
+            imgs: [prizeImg],
+          },
+          {
+            range: 2,
+            background: "#b8c5f2",
+            fonts: [{ text: "二等奖" }],
+            imgs: [prizeImg],
+          },
+          {
+            range: 0,
+            background: "#e9e8fe",
+            fonts: [{ text: "三等奖" }],
+            imgs: [prizeImg],
+          },
+          {
+            range: 0,
+            background: "#b8c5f2",
+            fonts: [{ text: "四等奖" }],
+            imgs: [prizeImg],
+          },
+          {
+            range: 0,
+            background: "#e9e8fe",
+            fonts: [{ text: "五等奖" }],
+            imgs: [prizeImg],
+          },
+          {
+            range: 0,
+            background: "#b8c5f2",
+            fonts: [{ text: "六等奖" }],
+            imgs: [prizeImg],
+          },
+        ],
+        buttons: [
+          { radius: "35%", background: "#617df2" },
+          { radius: "30%", background: "#afc8ff" },
+          {
+            radius: "25%",
+            background: "#869cfa",
+            pointer: true,
+            fonts: [{ text: "开始", fontSize: "32px", top: "-20px" }],
+          },
+        ],
+
+        start: function () {
+          // 开始游戏
+          myLucky.play();
+          // 假设接口的请求速度是1s
+          // 生成一个随机角度作为停止位置
+          const randomAngle = Math.floor(Math.random() * 360);
+          // 生成一个1到3秒之间的随机时间
+          const randomTime =
+            Math.floor(Math.random() * (3000 - 1000 + 1)) + 1000; // 1000毫秒 = 1秒
+          setTimeout((_) => {
+            // 停止游戏（使用1-3秒内随机时间）,并且使用随机角度
+            myLucky.stop(randomAngle); //注意: 使用 range 属性时, stop 方法就不能传递中奖索引了, 否则 stop 传递的索引具有优先级, 会无视 range 属性;
+          }, randomTime);
+        },
+        end: function (prize) {
+          // 游戏停止时触发
+          alert("恭喜中奖: " + prize.fonts[0].text);
+        },
+      });
+    </script>
+  </body>
+</html>

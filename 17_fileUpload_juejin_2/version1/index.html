@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/element-ui/lib/theme-chalk/index.css"
+    />
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+  </head>
+  <body>
+    <div id="root">
+      <input type="file" @change="handleChange" />
+      <el-button @click="handleClick">upload</el-button>
+      <!-- 梳理一下思路
+      文件选择后，文件对象就会被赋值到 container.file变量上，
+      点击upload按钮后，
+        首先将文件对象切片，并将生成的切片数组处理一下，赋值给 data 对象
+
+
+      
+      -->
+    </div>
+  </body>
+  <script type="text/javascript">
+    const ChunkSize = 1 * 1024 * 1024;
+    const vm = new Vue({
+      el: "#root",
+      data: () => {
+        return {
+          container: {
+            file: null,
+          },
+          data: [],
+        };
+      },
+      methods: {
+        // 存储文件对象
+        handleFileChange(e) {
+          const [file] = e.target.files;
+          if (!file) {
+            return;
+          }
+          // Object.assign()
+          this.container.file = file;
+        },
+        // 封装一个ajax 函数
+        myajax({ url = "", method = "post", data, headers = {}, requestList }) {
+          return new Promise((resolve, reject) => {
+            let xhr = new XMLHttpRequest();
+            // 初始化一个请求
+            xhr.open(method, url);
+            // 设置请求头
+            Object.keys(headers).forEach((key) => {
+              xhr.setRequestHeader(key, headers[key]);
+            });
+            // 发送请求
+            xhr.send(data);
+            // 请求完成时
+            xhr.onload = (e) => {
+              const response = e.target.response;
+              resolve(JSON.parse(response));
+            };
+            // 出现错误时
+            xhr.onerror = (error) => {
+              reject(error);
+            };
+          });
+        },
+        // 将文件切分为切片，返回得到的文件切片列表
+        /**
+         * @params file:一个文件对象
+         * [
+         *  {file:xxxx},
+         *  {file:xxxx},
+         *  {file:xxxx},
+         * ]
+         */
+        createFileChunk(file) {
+          const fileChunkList = [];
+          let cur = 0;
+          while (cur < file.size) {
+            fileChunkList.push({ file: file.slice(cur, cur + ChunkSize) });
+            cur += ChunkSize;
+          }
+          return fileChunkList;
+        },
+        // 上传切片
+        async uploadChunk() {
+          const requestList = this.data
+            /**
+             * [
+             *  {chunk:xxx,hash:xxx,name:xxxx},
+             *  ....
+             * ]
+             */
+            .map((item) => {
+              return this.createFormData(item);
+            })
+            /**
+             * [
+             *  {fd:fd},
+             *  {fd:fd},
+             *  ...
+             * ]
+             *
+             *
+             */
+            .map(({ fd }) => {
+              this.myajax({
+                url: "http://localhost:8001/upload",
+                data: fd,
+              });
+            });
+          await Promise.all(requestList);
+        },
+        // 为每一个fileChunk 创建一个formData用于向后端提交
+        /**
+         * @params file:一个文件对象
+         *
+         */
+        createFormData({ name = "", chunk = null, hash = "" }) {
+          const fd = new FormData();
+          fd.append("chunk", chunk);
+          fd.append("hash", hash);
+          fd.append("filename", name);
+          return { fd };
+        },
+        // 处理点击上传事件
+        async handleUpload() {
+          if (!this.container.file) {
+            return;
+          }
+          const file_chunk_list = this.createFileChunk(this.container.file);
+          this.data = file_chunk_list.map(({ file }, index) => {
+            return {
+              chunk: file,
+              hash: this.container.file.name + "-" + index,
+              name: this.container.file.name,
+            };
+          });
+          await this.uploadChunk();
+        },
+        async mergeRequest() {
+          await this.request({
+            url: "http://localhost:8001/merge",
+            headers: {
+              "content-type": "application/json",
+            },
+            data: JSON.stringify({
+              filename: this.container.file.name,
+            }),
+          });
+        },
+      },
+    });
+  </script>
+</html>
