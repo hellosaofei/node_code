@@ -21,6 +21,7 @@
     "13": "nodemon ./13_socket_native/server/index.js",
     "14": "nodemon ./14_expressDBTest/app.js",
     "15": "nodemon ./15_processTest/index.js",
+    "17": "nodemon ./17_fileUpload_juejin_2/version1/app1.js",
     "dev": "nodemon ./9_jwt/app.js",
     "file_upload": "nodemon ./4_fileUpload_xiaoye/server/app1.js",
     "session": "nodemon ./11_session/app.js"

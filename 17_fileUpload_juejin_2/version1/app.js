@@ -1,10 +1,10 @@
 const http = require("http");
 const path = require("path");
-
+const fse = require("fs-extra");
 const multiparty = require("multiparty");
 
 const server = http.createServer();
-const upload_dir = path.resolve();
+const upload_dir = path.resolve(__dirname, "..", "public");
 
 server.on("request", async (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -21,13 +21,15 @@ server.on("request", async (req, res) => {
       return;
     }
     const [chunk] = files.chunk;
-    const [hash] = files.hash;
-    const [filename] = files.filename;
-    const chunkDir = path.resolve();
-    // const chunkDir
+    const [hash] = fields.hash;
+    const [filename] = fields.filename;
+    console.log(chunk, hash, filename);
+    // const chunkDir = path.resolve(upload_dir,'upload_video',filename);
+
+    // fse.writeFileSync()
   });
 });
 
-server.listen(3000, () => {
+server.listen(8001, () => {
   console.log("服务端已经启动！！！");
 });

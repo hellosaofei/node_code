@@ -3,21 +3,25 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>File Input Example</title>
   </head>
   <body>
-    <button id="button">点击</button>
-    <ul id="container"></ul>
+    <!-- <input type="file" id="fileInput" onchange="handleChange(event)" /> -->
+    <input type="file" onchange="handleChange1(event)" />
     <script>
-      function fibs(n) {
-        let cur = 0;
-        let a = 0;
-        let b = 1;
-        while (cur < n) {
-          [a, b] = [b, a + b];
-          cur++;
-        }
-        return a;
+      // function handleChange(event) {
+      //   // 这里，event就是事件对象
+      //   var fileInput = event.target; // 引用触发事件的元素（即<input type="file">）
+      //   var file = fileInput.files[0]; // 获取用户选择的第一个文件（如果有的话）
+
+      //   if (file) {
+      //     console.log("Selected file:", file.name);
+      //   } else {
+      //     console.log("No file selected.");
+      //   }
+      // }
+      function handleChange1(e) {
+        console.log(e);
       }
     </script>
   </body>

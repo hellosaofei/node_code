@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <input type="file" />
+    <script src="https://cdn.bootcdn.net/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>
+    <script>
+      let count = 0;
+      const ChunkSize = 1 * 1024 * 1024;
+      let ChunkList = [];
+      const spark = new SparkMD5.ArrayBuffer();
+
+      let fileCon = document.querySelector("input");
+      // 监听文件的变化，先切片后计算Md5值
+      fileCon.onchange = function (e) {
+        const [file] = e.target.files;
+        ChunkList = createFileChunk(file);
+        calculateMD5();
+      };
+      // 使用spark-md5模块计算 MD5 值
+      // 下面代码容易造成死循环
+      //   function calculateMD5() {
+      //     let count = 0;
+      //     while (count < ChunkList.length) {
+      //       const reader = new FileReader();
+      //       reader.readAsArrayBuffer(ChunkList[count]);
+      //       reader.onload = function (e) {
+      //         count++;
+      //         spark.append(e.target.result);
+      //       };
+      //     }
+      //     const hex = spark.end();
+      //     console.log(hex);
+      //   }
+      function calculateMD5() {
+        console.log("计算MD5");
+        const reader = new FileReader();
+        reader.readAsArrayBuffer(ChunkList[count]);
+        reader.onload = function (e) {
+          count++;
+          spark.append(e.target.result);
+          if (count === ChunkList.length) {
+            const hex = spark.end();
+            console.log(hex);
+            self.close();
+          } else {
+            calculateMD5();
+          }
+        };
+      }
+      // 将选择的文件进行切片，并返回得到的文件切片列表
+      function createFileChunk(file) {
+        const fileChunkList = [];
+        let cur = 0;
+        while (cur < file.size) {
+          fileChunkList.push(file.slice(cur, cur + ChunkSize));
+          cur += ChunkSize;
+        }
+        return fileChunkList;
+      }
+    </script>
+  </body>
+</html>
+<!-- 该文件存在的问题是：选择大文件后，页面容易卡死，接下来引入 Web Worker，将计算任务分给 WorkerJS 线程 -->

@@ -11,16 +11,12 @@
 
     <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
     <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>
   </head>
   <body>
     <div id="root">
       <input type="file" @change="handleFileChange" />
       <el-button @click="handleUpload">upload</el-button>
-      <!-- 梳理一下思路
-      文件选择后，文件对象就会被赋值到 container.file变量上，
-      点击upload按钮后，
-        首先将文件对象切片，并将生成的切片数组处理一下，赋值给 data 对象
-      -->
     </div>
   </body>
   <script type="text/javascript">
@@ -33,11 +29,33 @@
             file: null,
             filename: "",
             extension: "",
+            hash: "",
           },
+          count: 0, // 用于进行chunk计数
+          chunkList: [],
           data: [],
+          spark: null,
+          worker: null,
         };
       },
+      mounted() {
+        this.spark = new SparkMD5.ArrayBuffer();
+      },
       methods: {
+        calculateMD5() {
+          const reader = new FileReader();
+          reader.readAsArrayBuffer(this.chunkList[this.count].file);
+          reader.onload = (e) => {
+            this.count++;
+            this.spark.append(e.target.result);
+            if (this.count === this.chunkList.length) {
+              this.container.hash = this.spark.end();
+              self.close();
+            } else {
+              this.calculateMD5();
+            }
+          };
+        },
         // 存储文件对象
         handleFileChange(e) {
           const [file] = e.target.files;
@@ -46,8 +64,11 @@
           }
           // Object.assign()
           this.container.file = file;
-          this.container.filename = this.container.file.name.split(".")[0];
-          this.container.extension = this.container.file.name.split(".")[1];
+          this.container.filename = file.name.split(".")[0];
+          this.container.extension = file.name.split(".")[1];
+          this.chunkList = this.createFileChunk(file);
+          console.log(this.chunkList);
+          this.calculateMD5();
         },
         // 封装一个ajax 函数
         myajax({ url = "", method = "post", data, headers = {}, requestList }) {
@@ -72,15 +93,7 @@
             };
           });
         },
-        // 将文件切分为切片，返回得到的文件切片列表
-        /**
-         * @params file:一个文件对象
-         * [
-         *  {file:xxxx},
-         *  {file:xxxx},
-         *  {file:xxxx},
-         * ]
-         */
+        // 将文件分割为切片列表并返回分割结果
         createFileChunk(file) {
           const fileChunkList = [];
           let cur = 0;
@@ -90,28 +103,12 @@
           }
           return fileChunkList;
         },
-
         // 上传切片
         async uploadChunk() {
           const requestList = this.data
-            /**
-             * [
-             *  {chunk:xxx,hash:xxx,name:xxxx},
-             *  ....
-             * ]
-             */
             .map((item) => {
               return this.createFormData(item);
             })
-            /**
-             * [
-             *  {fd:fd},
-             *  {fd:fd},
-             *  ...
-             * ]
-             *
-             *
-             */
             .map(({ fd }) => {
               this.myajax({
                 url: "http://localhost:8001/upload",
@@ -120,11 +117,7 @@
             });
           await Promise.all(requestList);
         },
-        // 为每一个fileChunk 创建一个formData用于向后端提交
-        /**
-         * @params file:一个文件对象
-         *
-         */
+        // 将数据转换为formaData
         createFormData({ name = "", chunk = null, hash = "", extension = "" }) {
           const fd = new FormData();
           fd.append("chunk", chunk);
@@ -139,11 +132,10 @@
             return;
           }
 
-          const file_chunk_list = this.createFileChunk(this.container.file);
-          this.data = file_chunk_list.map(({ file }, index) => {
+          this.data = this.chunkList.map(({ file }, index) => {
             return {
               chunk: file,
-              hash: this.container.filename + "-" + index,
+              hash: this.container.hash + "-" + index,
               name: this.container.filename,
               extension: this.container.extension,
             };
@@ -151,9 +143,7 @@
           await this.uploadChunk();
           await this.mergeRequest();
         },
-
         // 合并请求
-
         mergeRequest() {
           this.myajax({
             url: "http://localhost:8001/merge",
